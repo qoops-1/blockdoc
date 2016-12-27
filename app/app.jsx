@@ -26,30 +26,26 @@ import RpcSubprovider from 'web3-provider-engine/subproviders/rpc.js';
 class Form extends React.Component {
     constructor(props) {
         super(props)
-        this.state = {value: "", file: ""}
+        this.state = {value: "", hash: ""}
         this.handleUpload = this.handleUpload.bind(this)
         this.handleSubmit = this.handleSubmit.bind(this)
     }
 
     handleSubmit(e) {
         e.preventDefault()
-        console.log("on submit: " + SHA256(this.state.file))
+        let reader = new FileReader()
+        reader.onload = ((that) => { 
+            return e => { 
+                that.setState({ hash: SHA256(e.target.result) })
+            }
+        })(this)
+        reader.onerror = e => { console.log("Error loading file") }
+        reader.readAsText(document.getElementById("doc-field").files[0])
     }
 
     handleUpload(e) {
         this.setState({ value: e.target.value })
         console.log("File uploaded")
-        let reader = new FileReader()
-        let f
-        reader.onload = ((that) => { 
-            return e => { 
-                console.log("now: " + that.state.file)
-                that.setState( { file: e.target.result })
-                console.log("then: " + that.state.file)
-            }
-        })(this)
-        reader.onerror = e => { console.log("Error loading file") }
-        reader.readAsText(e.target.files[0])
     }
 
     render() {
