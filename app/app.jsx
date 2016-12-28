@@ -1,27 +1,19 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import Web3 from 'web3';
+
 import {SHA256} from 'crypto-js';
-import ProviderEngine from 'web3-provider-engine';
-import RpcSubprovider from 'web3-provider-engine/subproviders/rpc.js';
+import Documents from '../build/contracts/Documents.sol.js'
 
-// let engine = new ProviderEngine();
-// let web3 = new Web3(engine);
-// let base = 'http://localhost:8545'
-// engine.addProvider(new RpcSubprovider({
-//   rpcUrl: base
-// }))
-
-// // network connectivity error
-// engine.on('error', function (err) {
-//   // report connectivity errors
-//   console.error(err)
-// })
-// // start polling for blocks
-// engine.start();
-// Documents.setProvider(web3.currentProvider);
-// window.web3 = web3;
-// web3.Documents = Documents.deployed();
+let web3
+if (typeof web3 !== 'undefined') {
+  web3 = new Web3(web3.currentProvider);
+} else {
+  // set the provider you want from Web3.providers
+  web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+}
+Documents.setProvider(web3.currentProvider)
+window.Documents = Documents.deployed()
 
 class Form extends React.Component {
     constructor(props) {
@@ -35,7 +27,12 @@ class Form extends React.Component {
         e.preventDefault()
         let reader = new FileReader()
         reader.onload = ((that) => { 
-            return e => { 
+            return e => {
+                let hash = SHA256(e.target.result)
+                let tstamp = Documents.documents.call(hash)
+                if (tstamp) {
+                    console.log(tstamp)
+                }
                 that.setState({ hash: SHA256(e.target.result) })
             }
         })(this)

@@ -1,9 +1,10 @@
 module.exports = {
-  build: {
-    "index.html": "index.html",
+  build: "webpack",
+  networks: {
+    "dev": {
+      host: "localhost",
+      port: 8545,
+      network_id: 1525,
+    }
   },
-  rpc: {
-    host: "localhost",
-    port: 8545
-  }
 };
