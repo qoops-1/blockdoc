@@ -17,7 +17,7 @@ window.Documents = Documents.deployed()
 class Form extends React.Component {
     constructor(props) {
         super(props)
-        this.state = {}
+        this.state = {value: ""}
         this.handleUpload = this.handleUpload.bind(this)
         this.handleSubmit = this.handleSubmit.bind(this)
     }
@@ -28,7 +28,6 @@ class Form extends React.Component {
 
     handleUpload(e) {
         this.setState({ value: e.target.value })
-        console.log("File uploaded")
     }
 
     render() {
@@ -99,7 +98,7 @@ class Container extends React.Component {
         return (
             <div>
                 <Form
-                    onSubmit={onSubmit} />
+                    onSubmit={this.onSubmit} />
                 <Status
                     hash={this.state.hash}
                     timestamp={this.state.timestamp} />
@@ -107,4 +106,4 @@ class Container extends React.Component {
         )
     }
 }
-ReactDOM.render(<Form/>, document.getElementById('root'));
+ReactDOM.render(<Container/>, document.getElementById('root'));
