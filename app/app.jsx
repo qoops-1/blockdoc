@@ -13,6 +13,8 @@ if (typeof web3 !== 'undefined') {
 }
 Documents.setProvider(web3.currentProvider)
 let acc = web3.eth.accounts[0]
+let docs = Documents.deployed()
+
 
 class Form extends React.Component {
     constructor(props) {
@@ -43,11 +45,14 @@ class Form extends React.Component {
 class Status extends React.Component {
 
     render() {
-        let text = "The document was successfully saved"
-        if (this.props.existed === undefined) {
-            text = ""
-        } else if (this.props.existed) {
+        let text
+        console.log("Inside status.render:")
+        console.log(this.props.existed)
+        console.log(this.props.timestamp)
+        if (this.props.existed) {
             text = "The document has already existed"
+        } else {
+            text = "The document was successfully saved"
         }
         return (
             <span>
@@ -64,54 +69,53 @@ class Status extends React.Component {
 class Container extends React.Component {
     constructor(props) {
         super(props)
-        this.state = {}
+        this.state = {
+            hash: null,
+            timestamp: null,
+            existed: null
+        }
         this.onSubmit = this.onSubmit.bind(this)
     }
 
     onSubmit(e) {
         e.preventDefault()
-        let reader = new FileReader()
+        const reader = new FileReader()
         reader.onload = (e => {
-                let docs = Documents.deployed()
-                let hash = SHA256(e.target.result)
-                console.log(hash.toString())
+                const hash = SHA256(e.target.result)
                 docs.documents.call(hash, {from: acc}).then(timestamp => {
-                    let docExisted
                     console.log("checked timestamp: " + timestamp)
+                    let newState = { hash: hash }
                     if (timestamp == 0) {
-                        docExisted = false
-
-                        let timeOfAddition = docs.addDocument(hash, {from: acc}).then(() => docs.documents.call(hash, {from: acc}))
+                        const timeOfAddition = docs.addDocument(hash, {from: acc}).then(() => docs.documents.call(hash, {from: acc}))
                         timeOfAddition.then(((time) => {
-                            console.log("Counter time for a new doc: " + time)
-                            this.setState({timestamp: time})
+                            console.log("Timestamp for the new doc: " + time)
+                            console.log(newState)
+                            this.setState(newState)
                         }).bind(this))
                     } else {
-                        docExisted = true
                         console.log("The doc was already there with timestamp: " + timestamp)
-                        this.setState({
-                            timestamp: timestamp,
-                        })
+                        newState.timestamp = timestamp
+                        newState.existed = true                        
+                        console.log(newState)
+                        this.setState(newState)
                     }
-                    this.setState({
-                        hash: hash,
-                        existed: docExisted
-                    })
                 })
         }).bind(this)
-        reader.onerror = e => { console.log("Error loading file") }
+        reader.onerror = e => { console.error("Error loading file") }
         reader.readAsText(document.getElementById("doc-field").files[0])
     }
 
     render() {
+        let status = null
+        if (this.state.existed != null) {
+            status = <Status hash={this.state.hash} timestamp={this.state.timestamp} />
+        }
         return (
             <div>
                 <Form
                     onSubmit={this.onSubmit} />
-                <Status
-                    existed={this.state.existed}
-                    hash={this.state.hash}
-                    timestamp={this.state.timestamp} />
+                    {this.state.timestamp}
+                    {status}
             </div>
         )
     }
