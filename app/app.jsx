@@ -12,7 +12,7 @@ if (typeof web3 !== 'undefined') {
   web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 }
 Documents.setProvider(web3.currentProvider)
-window.Documents = Documents.deployed()
+let acc = web3.eth.accounts[0]
 
 class Form extends React.Component {
     constructor(props) {
@@ -71,18 +71,17 @@ class Container extends React.Component {
     onSubmit(e) {
         e.preventDefault()
         let reader = new FileReader()
-        // TODO: Try binding anonymous function instead of creating closure
-        reader.onload = (() => { 
-            return e => {
+        reader.onload = (e => {
+                let docs = Documents.deployed()
                 let hash = SHA256(e.target.result)
-                console.log(hash)
-                Documents.documents.call(hash).then(timestamp => {
+                console.log(hash.toString())
+                docs.documents.call(hash, {from: acc}).then(timestamp => {
                     let docExisted
                     console.log("checked timestamp: " + timestamp)
-                    if (!timestamp) {
+                    if (timestamp == 0) {
                         docExisted = false
 
-                        let timeOfAddition = Documents.addDocument(hash).then(() => Documents.documents.call(hash))
+                        let timeOfAddition = docs.addDocument(hash, {from: acc}).then(() => docs.documents.call(hash, {from: acc}))
                         timeOfAddition.then(((time) => {
                             console.log("Counter time for a new doc: " + time)
                             this.setState({timestamp: time})
@@ -99,7 +98,6 @@ class Container extends React.Component {
                         existed: docExisted
                     })
                 })
-            }
         }).bind(this)
         reader.onerror = e => { console.log("Error loading file") }
         reader.readAsText(document.getElementById("doc-field").files[0])
