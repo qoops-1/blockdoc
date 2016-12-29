@@ -42,28 +42,24 @@ class Form extends React.Component {
     }
 }
 
-class Status extends React.Component {
-
-    render() {
-        let text
-        console.log("Inside status.render:")
-        console.log(this.props.existed)
-        console.log(this.props.timestamp)
-        if (this.props.existed) {
-            text = "The document has already existed"
-        } else {
-            text = "The document was successfully saved"
-        }
-        return (
-            <span>
-                {text}
-                <br/>
-                Timestamp: {this.props.timestamp}
-                <br/>
-                Document hash: {this.props.hash}
-            </span>
-        )
+function Status(props) {
+    if (props.existed === null) {
+        return null
     }
+    if (props.existed) {
+        text = "The document has already existed"
+    } else {
+        text = "The document was successfully saved"
+    }
+    return (
+        <span>
+            {text}
+            <br/>
+            Timestamp: {props.timestamp}
+            <br/>
+            Document hash: {props.hash}
+        </span>
+    )
 }
 
 class Container extends React.Component {
@@ -89,14 +85,12 @@ class Container extends React.Component {
                         const timeOfAddition = docs.addDocument(hash, {from: acc}).then(() => docs.documents.call(hash, {from: acc}))
                         timeOfAddition.then(((time) => {
                             console.log("Timestamp for the new doc: " + time)
-                            console.log(newState)
                             this.setState(newState)
                         }).bind(this))
                     } else {
                         console.log("The doc was already there with timestamp: " + timestamp)
                         newState.timestamp = timestamp
                         newState.existed = true                        
-                        console.log(newState)
                         this.setState(newState)
                     }
                 })
@@ -106,16 +100,11 @@ class Container extends React.Component {
     }
 
     render() {
-        let status = null
-        if (this.state.existed != null) {
-            status = <Status hash={this.state.hash} timestamp={this.state.timestamp} />
-        }
         return (
             <div>
                 <Form
                     onSubmit={this.onSubmit} />
-                    {this.state.timestamp}
-                    {status}
+                <Status hash={this.state.hash} timestamp={this.state.timestamp} existed={this.state.existed} />
             </div>
         )
     }
