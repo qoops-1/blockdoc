@@ -9,7 +9,7 @@
   "author": "Ilya Gladyshev",
   "license": "ISC",
   "dependencies": {
-    "ether-pudding": "^3.2.0",
+    "crypto-js": "^3.1.9-1",
     "json-loader": "^0.5.4",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
