@@ -44,7 +44,9 @@ class Status extends React.Component {
 
     render() {
         let text = "The document was successfully saved"
-        if (this.props.existed) {
+        if (this.props.existed === undefined) {
+            text = ""
+        } else if (this.props.existed) {
             text = "The document has already existed"
         }
         return (
@@ -70,26 +72,35 @@ class Container extends React.Component {
         e.preventDefault()
         let reader = new FileReader()
         // TODO: Try binding anonymous function instead of creating closure
-        reader.onload = ((that) => { 
+        reader.onload = (() => { 
             return e => {
                 let hash = SHA256(e.target.result)
-                let timestamp = Documents.documents.call(hash)
-                let docExisted
-                if (!timestamp) {
-                    docExisted = false
-                    Documents.addDocument(hash)
-                    timestamp = Documents.documents.call(hash)
-                } else {
-                    docExisted = true
-                }
-                // TODO: set state
-                that.setState({
-                    existed: docExisted,
-                    timestamp: timestamp,
-                    hash: hash
+                console.log(hash)
+                Documents.documents.call(hash).then(timestamp => {
+                    let docExisted
+                    console.log("checked timestamp: " + timestamp)
+                    if (!timestamp) {
+                        docExisted = false
+
+                        let timeOfAddition = Documents.addDocument(hash).then(() => Documents.documents.call(hash))
+                        timeOfAddition.then(((time) => {
+                            console.log("Counter time for a new doc: " + time)
+                            this.setState({timestamp: time})
+                        }).bind(this))
+                    } else {
+                        docExisted = true
+                        console.log("The doc was already there with timestamp: " + timestamp)
+                        this.setState({
+                            timestamp: timestamp,
+                        })
+                    }
+                    this.setState({
+                        hash: hash,
+                        existed: docExisted
+                    })
                 })
             }
-        })(this)
+        }).bind(this)
         reader.onerror = e => { console.log("Error loading file") }
         reader.readAsText(document.getElementById("doc-field").files[0])
     }
@@ -100,6 +111,7 @@ class Container extends React.Component {
                 <Form
                     onSubmit={this.onSubmit} />
                 <Status
+                    existed={this.state.existed}
                     hash={this.state.hash}
                     timestamp={this.state.timestamp} />
             </div>
