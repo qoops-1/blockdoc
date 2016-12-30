@@ -46,15 +46,15 @@ function Status(props) {
     if (props.existed === null) {
         return null
     }
-    let text
+    let message
     if (props.existed) {
-        text = "The document has already existed"
+        message = <span>The document has already existed</span>
     } else {
-        text = "The document was successfully saved"
+        message = <span>The document was successfully saved</span>
     }
     return (
         <div>
-            {text}
+            {message}
             <br/>
             <span>
                 Timestamp: {props.timestamp}
@@ -83,8 +83,8 @@ class Container extends React.Component {
         e.preventDefault()
         const reader = new FileReader()
         reader.onload = (e => {
-                const hash = SHA256(e.target.result)
-                this.checkDocument(hash)
+            const hash = SHA256(e.target.result).toString()
+            this.checkDocument(hash)
         }).bind(this)
         reader.onerror = e => { console.error("Error loading file") }
         reader.readAsText(document.getElementById("doc-field").files[0])
@@ -93,7 +93,6 @@ class Container extends React.Component {
     // Checks whether the documents exists and updates state accordingly
     checkDocument(hash) {
         docs.documents.call(hash, {from: acc}).then(timestamp => {
-            console.log("checked timestamp: " + timestamp)
             let newState = {
                 hash: hash,
                 existed: timestamp != 0
@@ -101,13 +100,11 @@ class Container extends React.Component {
             if (!newState.existed) {
                 const timeOfAddition = docs.addDocument(hash, {from: acc}).then(() => docs.documents.call(hash, {from: acc}))
                 timeOfAddition.then((time) => {
-                    console.log("Timestamp for the new doc: " + time)
-                    newState.timestamp = time
+                    newState.timestamp = time.toString()
                     this.setState(newState)
                 })
             } else {
-                console.log("The doc was already there with timestamp: " + timestamp)
-                newState.timestamp = timestamp
+                newState.timestamp = timestamp.toString()
                 this.setState(newState)
             }
         })
@@ -116,8 +113,7 @@ class Container extends React.Component {
     render() {
         return (
             <div>
-                <Form
-                    onSubmit={this.onSubmit} />
+                <Form onSubmit={this.onSubmit} />
                 <Status hash={this.state.hash} timestamp={this.state.timestamp} existed={this.state.existed} />
             </div>
         )
