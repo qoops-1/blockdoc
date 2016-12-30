@@ -46,19 +46,24 @@ function Status(props) {
     if (props.existed === null) {
         return null
     }
+    let text
     if (props.existed) {
         text = "The document has already existed"
     } else {
         text = "The document was successfully saved"
     }
     return (
-        <span>
+        <div>
             {text}
             <br/>
-            Timestamp: {props.timestamp}
+            <span>
+                Timestamp: {props.timestamp}
+            </span>
             <br/>
-            Document hash: {props.hash}
-        </span>
+            <span>
+                Document hash: {props.hash}
+            </span>
+        </div>
     )
 }
 
@@ -68,6 +73,7 @@ class Container extends React.Component {
         this.state = {
             hash: null,
             timestamp: null,
+            // True if the document has been saved before
             existed: null
         }
         this.onSubmit = this.onSubmit.bind(this)
@@ -78,25 +84,33 @@ class Container extends React.Component {
         const reader = new FileReader()
         reader.onload = (e => {
                 const hash = SHA256(e.target.result)
-                docs.documents.call(hash, {from: acc}).then(timestamp => {
-                    console.log("checked timestamp: " + timestamp)
-                    let newState = { hash: hash }
-                    if (timestamp == 0) {
-                        const timeOfAddition = docs.addDocument(hash, {from: acc}).then(() => docs.documents.call(hash, {from: acc}))
-                        timeOfAddition.then(((time) => {
-                            console.log("Timestamp for the new doc: " + time)
-                            this.setState(newState)
-                        }).bind(this))
-                    } else {
-                        console.log("The doc was already there with timestamp: " + timestamp)
-                        newState.timestamp = timestamp
-                        newState.existed = true                        
-                        this.setState(newState)
-                    }
-                })
+                this.checkDocument(hash)
         }).bind(this)
         reader.onerror = e => { console.error("Error loading file") }
         reader.readAsText(document.getElementById("doc-field").files[0])
+    }
+
+    // Checks whether the documents exists and updates state accordingly
+    checkDocument(hash) {
+        docs.documents.call(hash, {from: acc}).then(timestamp => {
+            console.log("checked timestamp: " + timestamp)
+            let newState = {
+                hash: hash,
+                existed: timestamp != 0
+            }
+            if (!newState.existed) {
+                const timeOfAddition = docs.addDocument(hash, {from: acc}).then(() => docs.documents.call(hash, {from: acc}))
+                timeOfAddition.then((time) => {
+                    console.log("Timestamp for the new doc: " + time)
+                    newState.timestamp = time
+                    this.setState(newState)
+                })
+            } else {
+                console.log("The doc was already there with timestamp: " + timestamp)
+                newState.timestamp = timestamp
+                this.setState(newState)
+            }
+        })
     }
 
     render() {
